@@ -758,7 +758,7 @@ Rules:
       },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.9, maxOutputTokens: 1200 }
+        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
       })
     });
 
@@ -766,7 +766,11 @@ Rules:
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const clean = text.replace(/```json|```/g, '').trim();
+    let clean = text.replace(/```json|```/g, '').trim();
+    // Extract just the JSON object in case Gemini adds extra text
+    const jsonMatch = clean.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No valid JSON found in response');
+    clean = jsonMatch[0];
     const parsed = JSON.parse(clean);
 
     weekLabel.textContent = getWeekLabel();
